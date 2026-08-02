@@ -16,7 +16,6 @@ export default function ForgotPasswordPage() {
   const supabase = createClient()
 
   useEffect(() => {
-    // Check if the user arrived via a password reset recovery link
     const hash = window.location.hash
     if (hash && hash.includes('type=recovery')) {
       setIsRecoveryFlow(true)

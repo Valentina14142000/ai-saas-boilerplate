@@ -1,27 +1,15 @@
 import { NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { stripe } from '@/utils/stripe/server'
+import { createClient } from '@/utils/supabase/server'
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
-    const cookieStore = await cookies()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
-        },
-      }
-    )
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -30,8 +18,8 @@ export async function POST(req: Request) {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: 'AI SaaS Boilerplate - Lifetime Access',
-              description: 'Next.js, Supabase, Tailwind, & Stripe Full-Stack Kit',
+              name: 'Lifetime Access Pass',
+              description: 'Unlimited generational quotas, priority processing, and advanced templates.',
             },
             unit_amount: 9900,
           },
@@ -39,14 +27,13 @@ export async function POST(req: Request) {
         },
       ],
       mode: 'payment',
-      customer_email: user?.email || undefined,
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?canceled=true`,
+      customer_email: user.email || undefined,
+      success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?canceled=true`,
     })
 
     return NextResponse.json({ url: session.url })
-  } catch (error: any) {
-    console.error('STRIPE CHECKOUT ERROR:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
