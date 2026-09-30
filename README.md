@@ -80,8 +80,8 @@ Open http://localhost:3000 in your browser to view your app.
 
 ## 📦 What You Get
 
-**Instant access to the source repository.
+Instant access to the source repository.
 
-**Step-by-step installation and environment variable guides.
+Step-by-step installation and environment variable guides.
 
-**Production-grade architecture to build your dream startup this weekend.
+Production-grade architecture to build your dream startup this weekend.
